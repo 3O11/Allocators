@@ -36,13 +36,17 @@ namespace tt
                 other.mMemorySource = nullptr;
                 other.mPtrBegin = nullptr;
                 other.mPtrMemorySize = 0;
+
+                return *this;
             }
 
             ~PagePtr()
             {
                 if (IsValid())
                 {
-                    mMemorySource->Dealloc(std::move(*this));
+                    PageAllocator *source = mMemorySource;
+                    mMemorySource = nullptr;
+                    source->Dealloc(std::move(*this));
                 }
             }
 
@@ -57,7 +61,13 @@ namespace tt
             friend class PageAllocator;
         };
     public:
-        PagePtr Alloc(size_t allocSize);
+        PageAllocator() = default;
+        PageAllocator(const PageAllocator&) = delete;
+        PageAllocator& operator=(const PageAllocator&) = delete;
+        PageAllocator(PageAllocator&&) = delete;
+        PageAllocator& operator=(PageAllocator&&) = delete;
+
+        PagePtr Alloc(size_t pageCount);
         void    Dealloc(PagePtr&& ptr);
 
         static const size_t GetPageSize();
